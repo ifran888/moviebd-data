@@ -141,6 +141,48 @@ header{position:sticky;top:0;z-index:100;height:68px;display:flex;align-items:ce
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
 .card-animate{animation:fadeUp .5s ease both;}
+
+.menu-btn{font-size:26px;cursor:pointer;color:white;}
+.side-menu{position:fixed;left:-300px;top:0;width:280px;height:100%;background:#071628;z-index:999;padding:20px;overflow-y:auto;transition:.3s;}
+.side-menu.open{left:0;}
+.side-menu h3{margin-bottom:10px;color:#38d9ff;}
+.side-menu a{display:block;padding:8px;color:white;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.1);}
+
+@media(max-width:768px){
+header{padding:0 12px;}
+.search-wrap input{width:140px;}
+.hero{padding:20px 10px;}
+.content-grid{grid-template-columns:repeat(2,1fr);padding:10px;gap:10px;}
+.card-title{font-size:.8rem;}
+}
+@media(min-width:769px){
+.content-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+}
+
+
+.menu-overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.5);
+z-index:998;
+display:none;
+}
+.menu-overlay.show{display:block;}
+
+
+.close-menu{
+background:none;
+border:none;
+color:white;
+font-size:24px;
+cursor:pointer;
+float:right;
+margin-bottom:10px;
+}
+.side-menu{
+transition:left .35s ease;
+}
+
 </style>
 </head>
 <body>
@@ -154,12 +196,22 @@ header{position:sticky;top:0;z-index:100;height:68px;display:flex;align-items:ce
 
 <!-- HEADER -->
 <header>
-  <div class="logo">⚡ FlickDrop</div>
+  <div class="menu-btn" onclick="toggleMenu()">☰</div>
+  <div class="logo">🎬 MOVIEBD</div>
   <div class="search-wrap">
     <span class="s-icon">🔍</span>
     <input type="text" id="searchInput" placeholder="Movie, Series খুঁজুন..." oninput="renderGrid()">
   </div>
 </header>
+
+<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+<div class="side-menu" id="sideMenu"><button class="close-menu" onclick="toggleMenu()">✕</button>
+   <h3>Categories</h3>
+   <div id="menuCategories"></div>
+
+   <h3 style="margin-top:20px;">Contents</h3>
+   <div id="menuContents"></div>
+</div>
 
 <!-- SYNC BAR -->
 <div class="sync-bar">
@@ -170,12 +222,12 @@ header{position:sticky;top:0;z-index:100;height:68px;display:flex;align-items:ce
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">Google Sheets Powered</div>
+  
   <h1>
     <div class="line1">সেরা Movies &</div>
     <div class="line2">Series Download করুন</div>
   </h1>
-  <p>Google Sheet-এ row যোগ করুন — site automatically update হবে।</p>
+  
   <div class="hero-stats">
     <div class="stat">
       <div class="stat-num" id="totalCount">—</div>
@@ -215,62 +267,7 @@ header{position:sticky;top:0;z-index:100;height:68px;display:flex;align-items:ce
   </div>
 </div>
 
-<!-- FAB -->
-<button class="fab" id="fab" onclick="togglePanel()">＋</button>
 
-<!-- PANEL — Sheet-এ add করার guide -->
-<div class="panel" id="panel">
-  <div class="panel-title">✦ নতুন Content যোগ করুন</div>
-  <div class="panel-note">
-    📋 নিচের তথ্য দিয়ে <strong>Google Sheet-এ একটি নতুন row</strong> যোগ করুন, তারপর <strong>Refresh</strong> চাপুন।
-  </div>
-
-  <div class="field">
-    <label>title</label>
-    <input type="text" id="f_title" placeholder="Movie / Series নাম">
-  </div>
-  <div class="field">
-    <label>thumb (poster image URL)</label>
-    <input type="text" id="f_thumb" placeholder="https://...">
-  </div>
-  <div class="field">
-    <label>drive (Google Drive link)</label>
-    <input type="text" id="f_drive" placeholder="https://drive.google.com/...">
-  </div>
-  <div class="field">
-    <label>year</label>
-    <input type="text" id="f_year" placeholder="2024">
-  </div>
-  <div class="field">
-    <label>genre</label>
-    <input type="text" id="f_genre" placeholder="Action, Drama...">
-  </div>
-  <div class="field">
-    <label>category</label>
-    <select id="f_cat">
-      <option value="movie">movie</option>
-      <option value="series">series</option>
-      <option value="bangla">bangla</option>
-      <option value="hindi">hindi</option>
-      <option value="english">english</option>
-    </select>
-  </div>
-  <div class="field">
-    <label>quality</label>
-    <select id="f_quality">
-      <option value="4K">4K</option>
-      <option value="1080p" selected>1080p</option>
-      <option value="720p">720p</option>
-      <option value="480p">480p</option>
-    </select>
-  </div>
-  <div class="field">
-    <label>rating (যেমন 8.5)</label>
-    <input type="text" id="f_rating" placeholder="8.5">
-  </div>
-
-  <button class="submit-btn" onclick="copyRowData()">📋 Row Data Copy করুন</button>
-</div>
 
 <script>
 // ══ CONFIG ══
@@ -312,7 +309,7 @@ async function loadFromSheets() {
         };
       });
 
-    setSyncStatus('ok', `${allContents.length}টি content load হয়েছে ✓`);
+    setSyncStatus('ok', 'Ready');
     document.getElementById('totalCount').textContent = allContents.length;
     renderGrid();
 
@@ -356,6 +353,13 @@ function renderGrid() {
   });
 
   document.getElementById('countBadge').textContent = filtered.length + ' টি';
+
+document.getElementById("menuContents").innerHTML =
+filtered.map(c => `<a href="${c.drive}" target="_blank">${c.title}</a>`).join('');
+
+const cats=[...new Set(allContents.map(c=>c.category))];
+document.getElementById("menuCategories").innerHTML =
+cats.map(c => `<a href="#" onclick="activeFilter='${c}';renderGrid()">${c}</a>`).join('');
 
   if (!filtered.length) {
     grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🎬</div><p>কোনো content পাওয়া যায়নি</p></div>`;
@@ -413,6 +417,16 @@ function copyRowData() {
     .then(() => alert('✅ Copied! এখন Google Sheet-এ paste করুন (Ctrl+V), তারপর Refresh চাপুন।'))
     .catch(() => alert('Copy হয়নি — manually Sheet-এ type করুন।'));
 }
+
+
+function toggleMenu(){
+ document.getElementById("sideMenu").classList.toggle("open");
+ document.getElementById("menuOverlay").classList.toggle("show");
+}
+
+
+document.getElementById("menuContents").innerHTML =
+allContents.map(c => `<a href="${c.drive}" target="_blank">${c.title}</a>`).join('');
 
 // ══ INIT ══
 loadFromSheets();
