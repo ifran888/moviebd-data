@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MOVIEBD</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030d1a;--surface:#071628;--card-bg:#0a1d35;
+  --border:rgba(100,180,255,0.12);--blue-1:#00b4ff;--blue-2:#0077cc;
+  --blue-3:#38d9ff;--blue-soft:rgba(56,217,255,0.08);
+  --text:#dff0ff;--muted:#5a8aaa;--white:#ffffff;--gold:#ffd166;
+  --green:#06d6a0;--red:#ef233c;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;}
+.bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);animation:drift 18s ease-in-out infinite alternate;}
+.orb-1{width:500px;height:500px;background:radial-gradient(circle,rgba(0,120,255,0.18),transparent 70%);top:-100px;left:-100px;animation-duration:20s;}
+.orb-2{width:400px;height:400px;background:radial-gradient(circle,rgba(0,200,255,0.12),transparent 70%);top:40%;right:-80px;animation-duration:15s;animation-delay:-7s;}
+.orb-3{width:300px;height:300px;background:radial-gradient(circle,rgba(0,80,200,0.15),transparent 70%);bottom:10%;left:30%;animation-duration:25s;animation-delay:-12s;}
+@keyframes drift{0%{transform:translate(0,0) scale(1);}50%{transform:translate(40px,30px) scale(1.1);}100%{transform:translate(-20px,50px) scale(0.95);}}
+.grid-lines{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(0,140,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,140,255,0.03) 1px,transparent 1px);background-size:60px 60px;}
+
+/* AD MODAL */
+.ad-modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:1rem;}
+.ad-modal.show{display:flex;}
+.ad-box{background:var(--card-bg);border:1px solid rgba(0,180,255,.3);border-radius:16px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.8),0 0 40px rgba(0,140,255,.15);}
+.ad-header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;background:rgba(0,180,255,.05);border-bottom:1px solid var(--border);}
+.ad-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;}
+.ad-timer{font-family:'Syne',sans-serif;font-size:.85rem;color:var(--blue-3);font-weight:700;}
+.ad-content{padding:1.5rem;text-align:center;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
+.ad-placeholder{width:100%;background:linear-gradient(135deg,rgba(0,100,200,.15),rgba(0,60,150,.1));border:2px dashed rgba(0,180,255,.2);border-radius:10px;padding:3rem 1rem;color:var(--muted);font-size:.85rem;}
+.ad-placeholder .ad-icon{font-size:2.5rem;margin-bottom:.5rem;}
+.ad-skip-btn{background:linear-gradient(135deg,var(--blue-1),var(--blue-2));color:#fff;border:none;padding:.65rem 2rem;border-radius:999px;font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(0,120,255,.4);opacity:.5;pointer-events:none;}
+.ad-skip-btn.ready{opacity:1;pointer-events:all;}
+.ad-skip-btn.ready:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,120,255,.5);}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:100;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 1rem;background:rgba(3,13,26,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);gap:.6rem;}
+.header-left{display:flex;align-items:center;gap:.7rem;}
+.menu-btn{background:none;border:none;cursor:pointer;padding:6px;display:flex;flex-direction:column;gap:5px;}
+.menu-btn span{display:block;width:22px;height:2px;background:var(--blue-3);border-radius:2px;transition:all .3s;}
+.menu-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.menu-btn.open span:nth-child(2){opacity:0;}
+.menu-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;letter-spacing:2px;background:linear-gradient(135deg,var(--blue-3) 0%,var(--blue-1) 60%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 10px rgba(0,180,255,0.5));white-space:nowrap;}
+.search-wrap{position:relative;flex:1;max-width:320px;}
+.search-wrap input{background:rgba(7,22,40,0.9);border:1px solid var(--border);color:var(--text);padding:.42rem .9rem .42rem 2.2rem;border-radius:30px;font-family:'Nunito',sans-serif;font-size:.83rem;width:100%;outline:none;transition:all .3s;}
+.search-wrap input:focus{border-color:var(--blue-1);box-shadow:0 0 0 3px rgba(0,180,255,.15);}
+.search-wrap input::placeholder{color:var(--muted);}
+.s-icon{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.8rem;pointer-events:none;}
+.refresh-btn{background:var(--blue-soft);border:1px solid rgba(0,180,255,.2);color:var(--blue-3);width:36px;height:36px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+.refresh-btn:hover{border-color:var(--blue-1);}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+.sync-dot.loading{background:var(--gold);animation:pulse 1s infinite;}
+.sync-dot.ok{background:var(--green);}
+.sync-dot.err{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* SIDEBAR */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:150;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(4px);}
+.overlay.show{opacity:1;pointer-events:all;}
+.sidebar{position:fixed;top:0;left:-280px;width:272px;height:100vh;background:rgba(5,14,28,.98);border-right:1px solid var(--border);z-index:160;transition:left .3s cubic-bezier(.25,.46,.45,.94);overflow-y:auto;padding-bottom:2rem;}
+.sidebar.open{left:0;}
+.sidebar-header{padding:1.2rem 1.2rem .8rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sidebar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;letter-spacing:2px;background:linear-gradient(135deg,var(--blue-3),var(--blue-1));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.close-btn{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;padding:4px;}
+.sidebar-section{padding:.9rem 1.2rem .3rem;}
+.sidebar-section-title{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:.6rem;}
+.sidebar-item{display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;border-radius:8px;cursor:pointer;transition:all .2s;color:var(--muted);font-size:.88rem;font-weight:600;border:1px solid transparent;}
+.sidebar-item:hover{background:var(--blue-soft);color:var(--white);border-color:var(--border);}
+.sidebar-item.active{background:rgba(0,180,255,.1);color:var(--blue-3);border-color:rgba(0,180,255,.2);}
+.sidebar-item .icon{font-size:1rem;width:20px;text-align:center;}
+.sidebar-count{margin-left:auto;background:rgba(0,180,255,.1);color:var(--blue-3);font-size:.68rem;padding:1px 7px;border-radius:999px;border:1px solid rgba(0,180,255,.15);}
+.sidebar-divider{height:1px;background:var(--border);margin:.6rem 1.2rem;}
+
+/* HERO */
+.hero{position:relative;z-index:1;padding:2.5rem 1.2rem 1.8rem;text-align:center;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:.5rem;background:var(--blue-soft);border:1px solid rgba(0,180,255,.2);padding:.28rem .9rem;border-radius:999px;font-size:.72rem;color:var(--blue-3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:1rem;font-weight:600;}
+.hero-eyebrow::before{content:'';width:6px;height:6px;background:var(--blue-3);border-radius:50%;animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.hero h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(2rem,6vw,4rem);line-height:1.05;margin-bottom:.6rem;letter-spacing:-1px;}
+.line1{color:var(--white);}
+.line2{background:linear-gradient(90deg,var(--blue-1),var(--blue-3),var(--blue-1));background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite;}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+.hero p{color:var(--muted);font-size:.88rem;max-width:400px;margin:0 auto 1.5rem;font-weight:300;line-height:1.6;}
+.hero-stats{display:flex;justify-content:center;gap:2rem;}
+.stat-num{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--blue-3);line-height:1;}
+.stat-lbl{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+/* FILTERS */
+.filters-bar{position:relative;z-index:1;padding:.5rem 1rem 1rem;display:flex;gap:.5rem;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.filters-bar::-webkit-scrollbar{display:none;}
+.chip{background:rgba(7,22,40,.8);border:1px solid var(--border);color:var(--muted);padding:.38rem 1rem;border-radius:999px;font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;white-space:nowrap;flex-shrink:0;}
+.chip::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--blue-1),var(--blue-2));opacity:0;transition:opacity .25s;}
+.chip span{position:relative;z-index:1;}
+.chip:hover,.chip.active{border-color:var(--blue-1);color:var(--white);}
+.chip.active{box-shadow:0 0 16px rgba(0,180,255,.3),inset 0 0 20px rgba(0,180,255,.1);}
+.chip.active::before,.chip:hover::before{opacity:.2;}
+
+/* SEC HEAD */
+.sec-head{position:relative;z-index:1;padding:0 1rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+.sec-head h2{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--white);display:flex;align-items:center;gap:.5rem;}
+.sec-head h2::before{content:'';display:block;width:4px;height:16px;background:linear-gradient(180deg,var(--blue-3),var(--blue-2));border-radius:2px;}
+
+/* GRID */
+.content-grid{position:relative;z-index:1;display:grid;gap:1rem;padding:0 1rem 5rem;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+@media(min-width:480px){.content-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1.2rem;padding:0 1.2rem 5rem;}}
+@media(min-width:768px){.content-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1.4rem;padding:0 1.5rem 5rem;}}
+@media(min-width:1200px){.content-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));padding:0 2rem 5rem;}}
+
+/* CARD */
+.movie-card{cursor:pointer;text-decoration:none;color:inherit;display:block;position:relative;}
+.card-inner{position:relative;border-radius:12px;overflow:hidden;background:var(--card-bg);border:1px solid var(--border);transition:transform .3s,box-shadow .3s;}
+
+/* click counter badge */
+.click-badge{position:absolute;top:-6px;right:-6px;z-index:10;background:var(--red);color:#fff;width:22px;height:22px;border-radius:50%;font-size:.65rem;font-weight:700;display:none;align-items:center;justify-content:center;font-family:'Syne',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4);}
+.click-badge.show{display:flex;}
+
+@media(hover:hover){
+  .movie-card:hover .card-inner{transform:rotateY(-4deg) rotateX(3deg) scale(1.03);box-shadow:6px 16px 40px rgba(0,0,0,.7),0 0 0 1px rgba(0,180,255,.4),0 0 30px rgba(0,140,255,.2);}
+  .movie-card:hover .thumb img{transform:scale(1.07);}
+  .movie-card:hover .dl-overlay{opacity:1;}
+  .movie-card:hover .dl-pill{transform:translateY(0);}
+}
+@media(hover:none){.movie-card:active .card-inner{transform:scale(.97);}}
+
+.thumb{aspect-ratio:2/3;overflow:hidden;position:relative;}
+.thumb img{width:100%;height:100%;object-fit:cover;transition:transform .5s;display:block;}
+.thumb-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(3,13,26,.9) 0%,rgba(3,13,26,.2) 40%,transparent 70%);z-index:1;}
+.dl-overlay{position:absolute;inset:0;background:rgba(0,20,50,.65);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:2;opacity:0;transition:opacity .3s;}
+.dl-pill{background:linear-gradient(135deg,var(--blue-1),var(--blue-2));color:#fff;padding:.5rem 1.2rem;border-radius:999px;font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:5px;box-shadow:0 4px 20px rgba(0,120,255,.5);transform:translateY(6px);transition:transform .3s;}
+.badge-q{position:absolute;top:7px;left:7px;z-index:4;background:linear-gradient(135deg,var(--blue-1),var(--blue-2));color:#fff;font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:4px;box-shadow:0 2px 8px rgba(0,100,255,.4);}
+.badge-r{position:absolute;top:7px;right:7px;z-index:4;background:rgba(3,13,26,.8);backdrop-filter:blur(6px);border:1px solid rgba(0,180,255,.15);color:var(--gold);font-size:.68rem;font-weight:600;padding:2px 6px;border-radius:5px;display:flex;align-items:center;gap:2px;}
+.card-body{padding:.6rem .75rem .75rem;position:relative;z-index:2;}
+.card-title{font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--white);margin-bottom:.28rem;}
+.card-sub{display:flex;gap:.4rem;align-items:center;font-size:.68rem;color:var(--muted);}
+.card-sub .dot{width:3px;height:3px;background:var(--muted);border-radius:50%;}
+.card-genre{background:rgba(0,180,255,.07);border:1px solid rgba(0,180,255,.12);color:var(--blue-3);padding:1px 6px;border-radius:3px;font-size:.64rem;font-weight:600;}
+@media(hover:none){.mobile-dl{display:block;text-align:center;padding:.45rem;background:linear-gradient(135deg,rgba(0,100,200,.3),rgba(0,60,150,.3));border-top:1px solid var(--border);color:var(--blue-3);font-size:.72rem;font-weight:700;letter-spacing:.5px;}}
+@media(hover:hover){.mobile-dl{display:none;}}
+
+/* LOADER */
+.loader{grid-column:1/-1;text-align:center;padding:4rem 2rem;color:var(--muted);}
+.loader-ring{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--blue-1);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty-state{grid-column:1/-1;text-align:center;padding:4rem 2rem;color:var(--muted);}
+
+/* BOTTOM NAV */
+.bottom-nav{display:none;}
+@media(max-width:640px){
+  .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(3,13,26,.95);backdrop-filter:blur(16px);border-top:1px solid var(--border);height:56px;}
+  .bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--muted);font-size:.58rem;font-weight:600;cursor:pointer;transition:color .2s;border:none;background:none;}
+  .bnav-item .bicon{font-size:1.1rem;}
+  .bnav-item.active{color:var(--blue-3);}
+  .content-grid{padding-bottom:70px;}
+}
+@media(min-width:900px){header{padding:0 2rem;}.hero{padding:3.5rem 2rem 2rem;}.filters-bar{padding:.8rem 2rem 1.2rem;justify-content:center;}.sec-head{padding:0 2rem 1.2rem;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.card-animate{animation:fadeUp .4s ease both;}
+</style>
+</head>
+<body>
+
+<div class="bg-canvas"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+<div class="grid-lines"></div>
+
+<!-- AD MODAL -->
+<div class="ad-modal" id="adModal">
+  <div class="ad-box">
+    <div class="ad-header">
+      <span class="ad-label">📢 বিজ্ঞাপন</span>
+      <span class="ad-timer" id="adTimer">5s</span>
+    </div>
+    <div class="ad-content">
+      <!-- আপনার Ad code এখানে বসান -->
+      <div class="ad-placeholder">
+        <div class="ad-icon">📢</div>
+        <div>এখানে আপনার Ad Code বসান</div>
+        <div style="font-size:.72rem;margin-top:.4rem;opacity:.6">(Adsterra / Google AdSense)</div>
+      </div>
+    </div>
+    <div style="padding:0 1.5rem 1.5rem;text-align:center;">
+      <button class="ad-skip-btn" id="adSkipBtn" onclick="skipAd()">Download Page এ যান →</button>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY + SIDEBAR -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <span class="sidebar-logo">MOVIEBD</span>
+    <button class="close-btn" onclick="closeSidebar()">✕</button>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Category</div>
+    <div class="sidebar-item active" onclick="sidebarFilter('all',this)"><span class="icon">🎬</span> সব Content<span class="sidebar-count" id="sc-all">0</span></div>
+    <div class="sidebar-item" onclick="sidebarFilter('movie',this)"><span class="icon">🎥</span> Movie<span class="sidebar-count" id="sc-movie">0</span></div>
+    <div class="sidebar-item" onclick="sidebarFilter('series',this)"><span class="icon">📺</span> Series<span class="sidebar-count" id="sc-series">0</span></div>
+    <div class="sidebar-item" onclick="sidebarFilter('bangla',this)"><span class="icon">🇧🇩</span> বাংলা<span class="sidebar-count" id="sc-bangla">0</span></div>
+    <div class="sidebar-item" onclick="sidebarFilter('hindi',this)"><span class="icon">🇮🇳</span> হিন্দি<span class="sidebar-count" id="sc-hindi">0</span></div>
+    <div class="sidebar-item" onclick="sidebarFilter('english',this)"><span class="icon">🌐</span> English<span class="sidebar-count" id="sc-english">0</span></div>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Quality</div>
+    <div class="sidebar-item" onclick="sidebarFilter('4k',this)"><span class="icon">✨</span> 4K Ultra HD<span class="sidebar-count" id="sc-4k">0</span></div>
+    <div class="sidebar-item" onclick="sidebarFilter('1080p',this)"><span class="icon">🔵</span> 1080p Full HD<span class="sidebar-count" id="sc-1080p">0</span></div>
+    <div class="sidebar-item" onclick="sidebarFilter('720p',this)"><span class="icon">⚪</span> 720p HD<span class="sidebar-count" id="sc-720p">0</span></div>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section">
+    <div class="sidebar-item" onclick="loadFromSheets();closeSidebar()"><span class="icon">🔄</span> Refresh Content</div>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+    <div class="logo">MOVIEBD</div>
+  </div>
+  <div class="search-wrap">
+    <span class="s-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search..." oninput="renderGrid()">
+  </div>
+  <div class="sync-dot loading" id="syncDot"></div>
+  <button class="refresh-btn" onclick="loadFromSheets()">🔄</button>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">BD Movie Hub</div>
+  <h1><div class="line1">সেরা Movies &</div><div class="line2">Series Download করুন</div></h1>
+  <p>Thumbnail-এ click করুন এবং সরাসরি Download করুন</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num" id="totalCount">—</div><div class="stat-lbl">Content</div></div>
+    <div class="stat"><div class="stat-num">4K</div><div class="stat-lbl">Quality</div></div>
+    <div class="stat"><div class="stat-num">Free</div><div class="stat-lbl">Download</div></div>
+  </div>
+</section>
+
+<!-- FILTERS -->
+<div class="filters-bar">
+  <button class="chip active" onclick="setFilter('all',this)"><span>🎬 সব</span></button>
+  <button class="chip" onclick="setFilter('movie',this)"><span>🎥 Movie</span></button>
+  <button class="chip" onclick="setFilter('series',this)"><span>📺 Series</span></button>
+  <button class="chip" onclick="setFilter('bangla',this)"><span>🇧🇩 বাংলা</span></button>
+  <button class="chip" onclick="setFilter('hindi',this)"><span>🇮🇳 হিন্দি</span></button>
+  <button class="chip" onclick="setFilter('english',this)"><span>🌐 English</span></button>
+  <button class="chip" onclick="setFilter('4k',this)"><span>✨ 4K</span></button>
+</div>
+
+<div class="sec-head"><h2>Content</h2></div>
+<div class="content-grid" id="contentGrid"><div class="loader"><div class="loader-ring"></div><p>Loading...</p></div></div>
+
+<nav class="bottom-nav">
+  <button class="bnav-item active" onclick="setFilter('all',null);setActiveBottomNav(this)"><span class="bicon">🏠</span>Home</button>
+  <button class="bnav-item" onclick="setFilter('movie',null);setActiveBottomNav(this)"><span class="bicon">🎥</span>Movie</button>
+  <button class="bnav-item" onclick="setFilter('series',null);setActiveBottomNav(this)"><span class="bicon">📺</span>Series</button>
+  <button class="bnav-item" onclick="setFilter('bangla',null);setActiveBottomNav(this)"><span class="bicon">🇧🇩</span>বাংলা</button>
+  <button class="bnav-item" onclick="toggleSidebar()"><span class="bicon">☰</span>Menu</button>
+</nav>
+
+<script>
+const SHEET_ID='11tVUwkMeb12rTTkMUJ9a05yJ84ISFIg8mLFZ5ekizK4';
+const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Sheet1`;
+let allContents=[];
+let activeFilter='all';
+let clickCounts={};
+let pendingCard=null;
+let adTimerInterval=null;
+
+// ══ AD SYSTEM ══
+function handleCardClick(cardId){
+  if(!clickCounts[cardId]) clickCounts[cardId]=0;
+  clickCounts[cardId]++;
+  const count=clickCounts[cardId];
+  const badge=document.getElementById('cb-'+cardId);
+
+  if(count<3){
+    if(badge){badge.textContent=count;badge.classList.add('show');}
+    setTimeout(()=>{if(badge)badge.classList.remove('show');},1500);
+  } else if(count===3){
+    // 3rd click = show ad
+    pendingCard=cardId;
+    showAd();
+    clickCounts[cardId]=0; // reset
+  }
+}
+
+function showAd(){
+  document.getElementById('adModal').classList.add('show');
+  document.body.style.overflow='hidden';
+  let secs=5;
+  const timerEl=document.getElementById('adTimer');
+  const skipBtn=document.getElementById('adSkipBtn');
+  timerEl.textContent=secs+'s';
+  skipBtn.classList.remove('ready');
+  if(adTimerInterval) clearInterval(adTimerInterval);
+  adTimerInterval=setInterval(()=>{
+    secs--;
+    timerEl.textContent=secs+'s';
+    if(secs<=0){
+      clearInterval(adTimerInterval);
+      timerEl.textContent='✓';
+      skipBtn.classList.add('ready');
+    }
+  },1000);
+}
+
+function skipAd(){
+  document.getElementById('adModal').classList.remove('show');
+  document.body.style.overflow='';
+  clearInterval(adTimerInterval);
+  if(pendingCard!==null){
+    const c=allContents.find(x=>x.id===pendingCard);
+    if(c) goToDownload(c);
+    pendingCard=null;
+  }
+}
+
+function goToDownload(c){
+  const params=new URLSearchParams({
+    title:c.title,thumb:c.thumb,drive:c.drive,
+    year:c.year,genre:c.genre,quality:c.quality,rating:c.rating,category:c.category
+  });
+  window.location.href='download.html?'+params.toString();
+}
+
+// ══ SIDEBAR ══
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show');document.getElementById('menuBtn').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');document.getElementById('menuBtn').classList.remove('open');}
+function sidebarFilter(f,el){
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter=f;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  renderGrid();closeSidebar();
+}
+function setFilter(f,btn){
+  activeFilter=f;
+  document.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderGrid();
+}
+function setActiveBottomNav(el){document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+
+// ══ SHEETS ══
+async function loadFromSheets(){
+  document.getElementById('syncDot').className='sync-dot loading';
+  try{
+    const res=await fetch(SHEET_URL+'&t='+Date.now());
+    const text=await res.text();
+    const json=JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const rows=json.table.rows;
+    const cols=json.table.cols.map(c=>c.label.toLowerCase().trim());
+    allContents=rows.filter(r=>r.c&&r.c[0]&&r.c[0].v).map((r,i)=>{
+      const get=(key)=>{const idx=cols.indexOf(key);return idx>=0&&r.c[idx]?String(r.c[idx].v).trim():'';};
+      return{id:i,title:get('title'),thumb:get('thumb'),drive:get('drive'),year:get('year'),genre:get('genre'),category:get('category').toLowerCase(),quality:get('quality'),rating:get('rating')};
+    });
+    document.getElementById('syncDot').className='sync-dot ok';
+    document.getElementById('totalCount').textContent=allContents.length;
+    updateSidebarCounts();renderGrid();
+  }catch(e){
+    document.getElementById('syncDot').className='sync-dot err';
+    document.getElementById('contentGrid').innerHTML=`<div class="empty-state"><p style="color:#ef233c">Data load হয়নি</p><p style="font-size:.8rem;margin-top:.4rem">Sheet → Share → Anyone with the link → Viewer</p></div>`;
+  }
+}
+
+function updateSidebarCounts(){
+  const map={all:allContents.length,movie:0,series:0,bangla:0,hindi:0,english:0,'4k':0,'1080p':0,'720p':0};
+  allContents.forEach(c=>{
+    if(map[c.category]!==undefined)map[c.category]++;
+    if(c.quality==='4K')map['4k']++;
+    else if(c.quality==='1080p')map['1080p']++;
+    else if(c.quality==='720p')map['720p']++;
+  });
+  Object.keys(map).forEach(k=>{const el=document.getElementById('sc-'+k);if(el)el.textContent=map[k];});
+}
+
+function renderGrid(){
+  const grid=document.getElementById('contentGrid');
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const filtered=allContents.filter(c=>{
+    const mF=activeFilter==='all'||c.category===activeFilter||(activeFilter==='4k'&&c.quality==='4K')||(activeFilter==='1080p'&&c.quality==='1080p')||(activeFilter==='720p'&&c.quality==='720p');
+    const mS=!q||c.title.toLowerCase().includes(q)||(c.genre&&c.genre.toLowerCase().includes(q));
+    return mF&&mS;
+  });
+  if(!filtered.length){grid.innerHTML=`<div class="empty-state"><p>🎬 কোনো content পাওয়া যায়নি</p></div>`;return;}
+  grid.innerHTML=filtered.map((c,i)=>`
+    <div class="movie-card card-animate" onclick="handleCardClick(${c.id})" style="animation-delay:${Math.min(i,20)*0.04}s">
+      <span class="click-badge" id="cb-${c.id}">1</span>
+      <div class="card-inner">
+        <div class="thumb">
+          <img src="${c.thumb||''}" alt="${c.title}" loading="lazy" onerror="this.src='https://placehold.co/200x300/071628/38d9ff?text=${encodeURIComponent(c.title.substring(0,10))}'">
+          <div class="thumb-overlay"></div>
+          ${c.quality?`<span class="badge-q">${c.quality}</span>`:''}
+          ${c.rating?`<span class="badge-r">⭐ ${c.rating}</span>`:''}
+          <div class="dl-overlay"><div class="dl-pill">⬇ Download</div></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">${c.title}</div>
+          <div class="card-sub">
+            ${c.year?`<span>${c.year}</span>`:''}
+            ${c.year&&c.genre?`<span class="dot"></span>`:''}
+            ${c.genre?`<span class="card-genre">${c.genre}</span>`:''}
+          </div>
+        </div>
+        <div class="mobile-dl">⬇ Download করতে ৩ বার ক্লিক করুন</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+loadFromSheets();
+</script>
+</body>
+</html>
